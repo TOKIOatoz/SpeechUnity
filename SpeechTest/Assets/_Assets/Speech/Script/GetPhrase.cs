@@ -10,11 +10,11 @@ public class GetPhrase : MonoBehaviour
     private DictationRecognizer _dictationRecognizer;
     //private int _killString = 0;
     //public string outputText;
-    private float _timeCounter = 0f;
+    //private float _timeCounter = 0f;
     void Start()
     {
         _dictationRecognizer = new DictationRecognizer();
-        _dictationRecognizer.InitialSilenceTimeoutSeconds = 1f;
+        _dictationRecognizer.InitialSilenceTimeoutSeconds = _timeOut;
         _dictationRecognizer.DictationHypothesis += _dicatationHypothesis;
         _dictationRecognizer.DictationResult += _dicatationResult;
         _dictationRecognizer.DictationComplete += (_complete) => _dictationRecognizer.Start();
@@ -35,16 +35,16 @@ public class GetPhrase : MonoBehaviour
     private void _dicatationHypothesis(string text)
     {
         //outputText = text.Substring(_killString);
-        Debug.Log(text);
-        _dictationRecognizer.Stop();
-        _dictationRecognizer.Dispose();
-        _dictationRecognizer.Start();
+        //Debug.Log(text);
+        //_dictationRecognizer.Stop();
+        //_dictationRecognizer.Dispose();
+        //_dictationRecognizer.Start();
         //_killString = text.Length;
     }
 
     private void _dicatationResult(string text, ConfidenceLevel confidence)
     {
-        //Debug.Log(text);
+        Debug.Log(text);
     }
 
     //private IEnumerator _dispose()

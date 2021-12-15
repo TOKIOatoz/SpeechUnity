@@ -325,10 +325,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1536648591}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bba72ba8118b75d47997f321171edaea, type: 3}
+  m_Script: {fileID: 11500000, guid: e9706698998b66241a386120e559f6d1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _timeOut: 0.25
+  _timeOut: 1
 --- !u!4 &1536648593
 Transform:
   m_ObjectHideFlags: 0
