@@ -52,7 +52,7 @@ public class GetPhraseToText : MonoBehaviour
     //表示するテキスト
     public Text TextToUI {get; private set;}
     private int _wordLength = 0, _pastTextLength = 0, _tentativeRow, _correctRow, _removeRow;
-    private int[] _removeLength;
+    private int[] _removeLength = new int[10];
     void Start()
     {
         //テキスト初期化
@@ -98,7 +98,10 @@ public class GetPhraseToText : MonoBehaviour
         //stringBuilder経由で仮代入
         _stringBuilder.Clear();
         _stringBuilder.Append(TextToUI.text);
-        _stringBuilder.Remove(_stringBuilder.Length - _wordLength, _wordLength);
+        if (_stringBuilder.Length - _wordLength > 0)
+        {
+            _stringBuilder.Remove(_stringBuilder.Length - _wordLength, _wordLength);
+        }
         _stringBuilder.Append(" ");
         _stringBuilder.Append(TentativeText[CurrentTesxIndex]);
         _tentativeSubstitutionText = _stringBuilder.ToString();
