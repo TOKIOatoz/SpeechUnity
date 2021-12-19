@@ -10,9 +10,15 @@ public class GetPhraseToText : MonoBehaviour
     //確定する為に必要な空白時間
     [SerializeField]
     private float _timeOut = 1f;
+    //行数
+    [SerializeField]
+    private int _maxRow = 2;
     //１行あたりの最大文字数
     [SerializeField]
     private int _maxTextLength = 20;
+    //末尾の最大空白数
+    [SerializeField]
+    private int _maxBlank = 3;
     private DictationRecognizer _dictationRecognizer;
     private bool _dicatationHypothesisFlag;
     private bool _dicatationResultFlag;
@@ -38,10 +44,15 @@ public class GetPhraseToText : MonoBehaviour
 
     private StringBuilder _stringBuilder = new StringBuilder();
 
+    private string _tentativeSubstitutionText = "";
+
+    //for文用
+    private int _num0, _num1;
+
     //表示するテキスト
     public Text TextToUI {get; private set;}
-    private int _wordLength = 0;
-    private int[] _pastTextLength = {0, 0, 0};
+    private int _wordLength = 0, _pastTextLength = 0, _tentativeRow, _correctRow, _removeRow;
+    private int[] _removeLength;
     void Start()
     {
         //テキスト初期化
@@ -84,11 +95,55 @@ public class GetPhraseToText : MonoBehaviour
     //テキストを追加
     private void _addText()
     {
+        //stringBuilder経由で仮代入
         _stringBuilder.Clear();
         _stringBuilder.Append(TextToUI.text);
         _stringBuilder.Remove(_stringBuilder.Length - _wordLength, _wordLength);
         _stringBuilder.Append(" ");
         _stringBuilder.Append(TentativeText[CurrentTesxIndex]);
+        _tentativeSubstitutionText = _stringBuilder.ToString();
+
+        //行数に応じて削除
+        _tentativeRow = (int)(_tentativeSubstitutionText.Length / (_maxTextLength - _maxBlank));
+        if (_tentativeRow > 0)
+        {
+            _correctRow = 0;
+            _pastTextLength = 0;
+            for (_num0 = 0; _num0 <= _tentativeRow; _num0++)
+            {
+                _correctRow++;
+                if ((_pastTextLength + _maxTextLength - _maxBlank) <= _tentativeSubstitutionText.Length)
+                {
+                    for (_num1 = _maxBlank; _num1 > 0; _num1--)
+                    {
+                        if (_tentativeSubstitutionText[_pastTextLength + _maxTextLength - _num1] == ' ' && _tentativeSubstitutionText[_pastTextLength + _maxTextLength - _num1] == '\n')
+                        {
+                            _stringBuilder.Insert(_pastTextLength + _maxTextLength - _num1, "\n");
+                            _stringBuilder.Remove(_pastTextLength + _maxTextLength - _num1, 1);
+                            _pastTextLength = _pastTextLength + _maxTextLength - _num1;
+                            _removeLength[_num0] = _pastTextLength;
+                            break;
+                        }
+                        else if (_num1 == 1)
+                        {
+                            _stringBuilder.Insert(_pastTextLength + _maxTextLength - _num1, "\n");
+                            _pastTextLength = _pastTextLength + _maxTextLength;
+                            _removeLength[_num0] = _pastTextLength;
+                        }
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+            _removeRow = _correctRow - _maxRow;
+            if (_removeRow > 0)
+            {
+                _stringBuilder.Remove(0, _removeLength[_removeRow - 1]);
+            }
+        }
+
         TextToUI.text = _stringBuilder.ToString();
         _wordLength = TentativeText[CurrentTesxIndex].Length + 1;
     }
@@ -117,7 +172,6 @@ public class GetPhraseToText : MonoBehaviour
     {
         TentativeText[CurrentTesxIndex] = speechText;
         _pastTextIndex = CurrentTesxIndex;
-        _pastTextLength[CurrentTesxIndex] = speechText.Length;
         CurrentTesxIndex++;
         _dicatationResultFlag = true;
     }
