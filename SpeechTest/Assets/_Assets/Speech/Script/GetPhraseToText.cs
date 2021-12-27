@@ -22,25 +22,16 @@ public class GetPhraseToText : MonoBehaviour
     private DictationRecognizer _dictationRecognizer;
     private bool _dicatationHypothesisFlag;
     private bool _dicatationResultFlag;
-    public string[] TentativeText {get; private set;} = new string[3];
+    
+    //音声入力でHypothesis又はResultで出てきたテキストの保管
+    //public string[] TentativeText {get; private set;} = new string[3];
+    public string TentativeText {get; private set;} = default;
 
     //テキストを仮で保持する量(表示テキストの行数)
     private int _maxIndex { get; } = 2;
-    private int _currentTesxIndex;
-    public int CurrentTesxIndex
-    {
-        get{ return this._currentTesxIndex; }
-        set
-        {
-            this._currentTesxIndex = value;
-            if(this._currentTesxIndex > _maxIndex)
-            {
-                this._currentTesxIndex = 0;
-            }
-        }
-    }
-
-    private int _pastTextIndex;
+    
+    //_setTextでセットされた１つ前の確定テキスト
+    private string _pastText = "";
 
     private StringBuilder _stringBuilder = new StringBuilder();
 
@@ -58,9 +49,6 @@ public class GetPhraseToText : MonoBehaviour
         //テキスト初期化
         TextToUI = this.gameObject.GetComponents<Text>()[0];
         TextToUI.text = "";
-
-        //仮テキスト番号初期化
-        CurrentTesxIndex = 0;
 
         //WindowsAPI
         _dictationRecognizer = new DictationRecognizer();
@@ -97,13 +85,9 @@ public class GetPhraseToText : MonoBehaviour
     {
         //stringBuilder経由で仮代入
         _stringBuilder.Clear();
-        _stringBuilder.Append(TextToUI.text);
-        if (_stringBuilder.Length - _wordLength > 0)
-        {
-            _stringBuilder.Remove(_stringBuilder.Length - _wordLength, _wordLength);
-        }
+        _stringBuilder.Append(_pastText);
         _stringBuilder.Append(" ");
-        _stringBuilder.Append(TentativeText[CurrentTesxIndex]);
+        _stringBuilder.Append(TentativeText);
         _tentativeSubstitutionText = _stringBuilder.ToString();
 
         //行数に応じて削除
@@ -119,6 +103,8 @@ public class GetPhraseToText : MonoBehaviour
                 {
                     for (_num1 = _maxBlank; _num1 > 0; _num1--)
                     {
+                        //TODO Fix
+                        //IndexOutOfRangeException: Index was outside the bounds of the array.
                         if (_tentativeSubstitutionText[_pastTextLength + _maxTextLength - _num1] == ' ' && _tentativeSubstitutionText[_pastTextLength + _maxTextLength - _num1] == '\n')
                         {
                             _stringBuilder.Insert(_pastTextLength + _maxTextLength - _num1, "\n");
@@ -148,34 +134,46 @@ public class GetPhraseToText : MonoBehaviour
         }
 
         TextToUI.text = _stringBuilder.ToString();
-        _wordLength = TentativeText[CurrentTesxIndex].Length + 1;
+        _wordLength = TentativeText.Length + 1;
     }
 
     //テキストをセット
     private void _setText()
     {
         _stringBuilder.Clear();
-        _stringBuilder.Append(TextToUI.text);
-        _stringBuilder.Remove(_stringBuilder.Length - _wordLength, _wordLength);
+        _stringBuilder.Append(_pastText);
         _stringBuilder.Append(" ");
-        _stringBuilder.Append(TentativeText[_pastTextIndex]);
+        _stringBuilder.Append(TentativeText);
         TextToUI.text = _stringBuilder.ToString();
         _wordLength = 0;
+
+
+        _pastText = TextToUI.text;
+    }
+
+    //改行入力
+    private void _newLine()
+    {
+
+    }
+
+    //行削除
+    private void _deleteRow()
+    {
+        
     }
 
     //WindowsSpeechが聞き取り中に仮テキストを更新
     private void _dicatationHypothesis(string speechText)
     {
-        TentativeText[CurrentTesxIndex] = speechText;
+        TentativeText = speechText;
         _dicatationHypothesisFlag = true;
     }
 
     //WindowsSpeechがフレーズを確定
     private void _dicatationResult(string speechText, ConfidenceLevel confidence)
     {
-        TentativeText[CurrentTesxIndex] = speechText;
-        _pastTextIndex = CurrentTesxIndex;
-        CurrentTesxIndex++;
+        TentativeText = speechText;
         _dicatationResultFlag = true;
     }
 }
