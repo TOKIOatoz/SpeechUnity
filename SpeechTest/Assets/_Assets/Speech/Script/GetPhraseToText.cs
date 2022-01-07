@@ -45,7 +45,7 @@ public class GetPhraseToText : MonoBehaviour
 
     //表示するテキスト
     public Text TextToUI {get; private set;}
-    private int _pastTextLength = 0, _tentativeRow, _correctRow, _removeRow;
+    private int _pastTextLength = 0, _tentativeRow, _correctRow, _removeRow, _lastIndex;
 
     void Start()
     {
@@ -78,7 +78,8 @@ public class GetPhraseToText : MonoBehaviour
 
         if (_dicatationResultFlag)
         {
-            _setText();
+            _addText();
+            _pastText = TextToUI.text;
             _dicatationResultFlag = false;
         }
     }
@@ -106,40 +107,24 @@ public class GetPhraseToText : MonoBehaviour
             //改行後代入
             _tentativeSubstitutionText = _stringBuilder.ToString();
 
-            //削除行数確認
-            _removeRow = _correctRow - _maxRow;
-            if (_removeRow > 0)
+            _lastIndex = _tentativeSubstitutionText.Length - 1;
+
+            //最後の1文字に余分なの入ってたら除去
+            if (_tentativeSubstitutionText[_lastIndex] == '\n' || _tentativeSubstitutionText[_lastIndex] == ' ')
             {
-                //行削除
-                _deleteRow();
+                _stringBuilder.Remove(_lastIndex, 1);
+                _tentativeSubstitutionText = _stringBuilder.ToString();
+                _lastIndex--;
             }
-        }
 
-        TextToUI.text = _stringBuilder.ToString();
-    }
-
-    //テキストをセット
-    private void _setText()
-    {
-        //stringBuilder経由で仮代入
-        _stringBuilder.Clear();
-        if (_pastText.Length > 0)
-        {
-            _stringBuilder.Append(_pastText);
-            _stringBuilder.Append(' ');
-            _stringBuilder.Replace('\n', ' ');
-        }
-        _stringBuilder.Append(TentativeText);
-        _tentativeSubstitutionText = _stringBuilder.ToString();
-
-        //文字数に応じて改行及び行削除
-        if (_tentativeSubstitutionText.Length > _maxTextLength)
-        {
-            //改行追加
-            _newLine();
-
-            //改行後代入
-            _tentativeSubstitutionText = _stringBuilder.ToString();
+            _correctRow = 1;
+            for (_num0 = 0; _num0 <= _lastIndex; _num0++)
+            {
+                if (_tentativeSubstitutionText[_num0] == '\n')
+                {
+                    _correctRow++;
+                }
+            }
 
             //TODO _correctRowが間違ってる場合が生じるので直す
             Debug.Log(_correctRow);
@@ -152,8 +137,8 @@ public class GetPhraseToText : MonoBehaviour
                 _deleteRow();
             }
         }
+
         TextToUI.text = _stringBuilder.ToString();
-        _pastText = TextToUI.text;
 
         Debug.Log(_pastText);
     }
@@ -165,15 +150,13 @@ public class GetPhraseToText : MonoBehaviour
         _tentativeRow = Mathf.CeilToInt((_tentativeSubstitutionText.Length - _maxTextLength + _maxBlank) / _maxTextLength) + 1;
         
         //実際の行数を加算していく変数のリセット
-        _correctRow = 0;
         _pastTextLength = 0;
         
         for (_num0 = 0; _num0 < _tentativeRow; _num0++)
         {
-            _correctRow++;
             if ((_pastTextLength + _maxTextLength) < _tentativeSubstitutionText.Length)
             {
-                for (_num1 = _maxBlank; _num1 > 0; _num1--)
+                for (_num1 = _maxBlank; _num1 >= 0; _num1--)
                 {
                     if (_tentativeSubstitutionText[_pastTextLength + _maxTextLength - _num1] == ' ')
                     {
@@ -182,7 +165,7 @@ public class GetPhraseToText : MonoBehaviour
                         _pastTextLength = _pastTextLength + _maxTextLength - _num1 + 1;
                         break;
                     }
-                    else if (_num1 == 1)
+                    else if (_num1 == 0)
                     {
                         _stringBuilder.Insert(_pastTextLength + _maxTextLength, "\n");
                         _pastTextLength = _pastTextLength + _maxTextLength + 1;
