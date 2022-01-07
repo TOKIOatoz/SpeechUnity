@@ -117,6 +117,7 @@ public class GetPhraseToText : MonoBehaviour
                 _lastIndex--;
             }
 
+            //行算出
             _correctRow = 1;
             for (_num0 = 0; _num0 <= _lastIndex; _num0++)
             {
@@ -125,9 +126,6 @@ public class GetPhraseToText : MonoBehaviour
                     _correctRow++;
                 }
             }
-
-            //TODO _correctRowが間違ってる場合が生じるので直す
-            Debug.Log(_correctRow);
 
             //削除行数確認
             _removeRow = _correctRow - _maxRow;
@@ -139,8 +137,6 @@ public class GetPhraseToText : MonoBehaviour
         }
 
         TextToUI.text = _stringBuilder.ToString();
-
-        Debug.Log(_pastText);
     }
 
     //改行入力
